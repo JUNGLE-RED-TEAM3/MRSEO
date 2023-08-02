@@ -1,10 +1,13 @@
 require("dotenv").config(!!process.env.CONFIG ? {path: process.env.CONFIG} : {});
+// MRSEO: timer 추가
+const timerModule = require('./timer'); 
 var express = require("express");
 var bodyParser = require("body-parser");
 var http = require("http");
 var OpenVidu = require("openvidu-node-client").OpenVidu;
 var cors = require("cors");
 var app = express();
+
 
 // Environment variable: PORT where the node server is listening
 var SERVER_PORT = process.env.SERVER_PORT || 5050;
@@ -55,6 +58,20 @@ io.on('connection', socket => {
   socket.on('clearCanvas', () => {
       socket.broadcast.emit('clearCanvas');
     });
+
+  // MRSEO: 
+  socket.on('gameStart', () => {
+    console.log('gameStart_server@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
+    timerModule.startTimer(io, () => {
+      console.log('타이머 종료');
+    });
+  
+  });
+
+  socket.on('consoleCommand', () => {
+    console.log('consoleCommand_server#################################');
+  });
+
 });
 
 
@@ -88,5 +105,7 @@ app.post("/api/sessions/:sessionId/connections", async (req, res) => {
     res.send(connection.token);
   }
 });
+
+
 
 process.on('uncaughtException', err => console.error(err));
