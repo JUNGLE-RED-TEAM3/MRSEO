@@ -1,9 +1,14 @@
 import useStore from '../store';
 
+const GameInitializer = () => {
 
-export const GameInitializer = () => {
-
-    const { setCanSeeAns, setdrawable, phase, round, gamers } = useStore();
+    const { 
+        setCanSeeAns, 
+        setdrawable, 
+        phase, 
+        round, 
+        gamers 
+    } = useStore();
     
     if ( phase === 'Game' && round === 1 ){
         for (let i = 0; i < gamers.length; i++) {
@@ -34,4 +39,7 @@ export const GameInitializer = () => {
             }
         }
     }
+    return ;
 }
+
+export default  GameInitializer;

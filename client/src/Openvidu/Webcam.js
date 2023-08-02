@@ -17,8 +17,7 @@ import GamePlay from '../Game/GamePlay';
 
 // react-bootstrap
 import { Row, Col } from 'react-bootstrap';
-// MRSEO:
-import { GameInitializer } from './GameInitializer';
+import socket from './socket';
 
 // ★ TODO: 서버 url 변경 필요
 // const APPLICATION_SERVER_URL = "https://mysquidcanvas.shop/"
@@ -32,16 +31,20 @@ const Webcam = () => {
   const [subscribers, setSubscribers] = useState([]);
 
   // MRSEO: ZUSTAND 상태 변수 선언
-  const { 
-    setCanSeeAns, 
-    setDrawable, 
-    ans, 
-    setAns, 
-    round, 
-    redScoreCnt, 
+  const {
+    setCanSeeAns,
+    setDrawable,
+    ans,
+    setAns,
+    round,
+    redScoreCnt,
     setRedScoreCnt,
     blueScoreCnt,
     setBlueScoreCnt,
+    phase,
+    setPhase,
+    setdrawable,
+    gamers,
    } = useStore();
 
   useEffect(() => {
@@ -52,6 +55,8 @@ const Webcam = () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
   }, []);
+
+
 
   const onBeforeUnload = (event) => {
     leaveSession();
@@ -89,7 +94,7 @@ const Webcam = () => {
     });
 
     mySession.on("streamDestroyed", (event) => {
-      var subscribers = [...subscribers];
+      // var subscribers = [...subscribers];
 
       const deleteSubscriber = (streamManager, subscribers) => {
         let index = subscribers.indexOf(streamManager, 0); 
@@ -172,8 +177,8 @@ const Webcam = () => {
         setCanSeeAns(!useStore.getState().gamers[0].canSeeAns, useStore.getState().gamers[0].name);
         setDrawable(!useStore.getState().gamers[0].drawable, useStore.getState().gamers[0].name);
 
-        // setCanSeeAns(!useStore.getState().gamers[2].canSeeAns, useStore.getState().gamers[2].name);
-        // setdrawable(!useStore.getState().gamers[2].drawable, useStore.getState().gamers[2].name);
+        setCanSeeAns(!useStore.getState().gamers[2].canSeeAns, useStore.getState().gamers[2].name);
+        setdrawable(!useStore.getState().gamers[2].drawable, useStore.getState().gamers[2].name);
 
         setRedScoreCnt(redScoreCnt + 1);
 
@@ -193,11 +198,46 @@ const Webcam = () => {
         }
       setAns('');
   };
+  // MRSEO: 게임 초기화
+  const GameInitializer = () => {
+
+    if ( phase === 'Game' && round === 1 ){
+        for (let i = 0; i < gamers.length; i++) {
+            if ( i === 0 ){
+                setCanSeeAns(true, gamers[i].name);
+                setdrawable(true, gamers[i].name);
+            } else if ( i === 1 || i === 3) {
+                setCanSeeAns(true, gamers[i].name);
+                setdrawable(false, gamers[i].name);
+            } else {
+                setCanSeeAns(false, gamers[i].name);
+                setdrawable(false, gamers[i].name);
+            }
+        }
+    }
+
+    if ( phase === 'Game' && round === 2 ){
+        for (let i = 0; i < gamers.length; i++) {
+            if ( i === 1 ){
+                setCanSeeAns(true, gamers[i].name);
+                setdrawable(true, gamers[i].name);
+            } else if ( i === 0 || i === 2) {
+                setCanSeeAns(true, gamers[i].name);
+                setdrawable(false, gamers[i].name);
+            } else {
+                setCanSeeAns(false, gamers[i].name);
+                setdrawable(false, gamers[i].name);
+            }
+        }
+    }
+}
+
 
   const handleGameStart = () => {
     // MRSEO: 게임 시작 버튼 누르면, 게임 시작
-      useStore.getState().setPhase('Game');
+      setPhase('Game');
       GameInitializer();
+      socket.emit('gameStart');
   };
 
   const getToken = async () => {
@@ -225,6 +265,9 @@ const Webcam = () => {
   
   const consoleCommand = () => {
     console.log(useStore.getState().gamers);
+    socket.emit('consoleCommand', () => {
+      console.log('consoleCommand_client@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
+    });
   }
 
   return (
@@ -273,7 +316,7 @@ const Webcam = () => {
 
         {session !== undefined ? (
             <>
-            {useStore.getState().phase === 'Ready' || useStore.getState().phase === 'Game' ? (
+            {phase === 'Ready' || phase === 'Game' ? (
               // JANG: 게임 대기방으로 만들기!
                 <div className="GameForm">
 
@@ -310,7 +353,7 @@ const Webcam = () => {
                           </Button>
                           {' '}
                           {/* Start 버튼은 4명이 다 차면 뜨도록 변경! */}
-                        {useStore.getState().gamers.length === 4 ? (
+                        {useStore.getState().gamers.length === 1 ? (
                           <Button
                           variant='primary'
                           size='lg'                          

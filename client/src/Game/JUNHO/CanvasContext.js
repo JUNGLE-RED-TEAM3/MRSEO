@@ -21,7 +21,9 @@ export const CanvasProvider = ({ children }) => {
 
   useEffect(() => {
 
-    socketRef.current = io.connect('http://localhost:5050');
+    socketRef.current = io.connect('http://localhost:5050', () => {
+      console.log('connected to server$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+    });
 
     socketRef.current.on('startDrawing', data => {  // Listen for 'startDrawing' events
       const { offsetX, offsetY, lineWidth, strokeColor } = data;
